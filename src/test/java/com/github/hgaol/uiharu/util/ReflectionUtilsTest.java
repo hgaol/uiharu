@@ -1,6 +1,6 @@
-package com.github.hgaolbb.uiharu.util;
+package com.github.hgaol.uiharu.util;
 
-import com.github.hgaolbb.uiharu.demo.HelloDemo;
+import com.github.hgaol.uiharu.demo.HelloDemo;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -18,7 +18,7 @@ public class ReflectionUtilsTest {
 
     @Test
     public void newInstance1() {
-        Object obj = ReflectionUtils.newInstance("com.github.hgaolbb.uiharu.util.ReflectionUtils");
+        Object obj = ReflectionUtils.newInstance("com.github.hgaol.uiharu.util.ReflectionUtils");
         assertTrue(obj instanceof ReflectionUtils);
     }
 

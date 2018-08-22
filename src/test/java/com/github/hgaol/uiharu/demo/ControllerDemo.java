@@ -1,6 +1,7 @@
 package com.github.hgaol.uiharu.demo;
 
 import com.github.hgaol.uiharu.annotation.Controller;
+import com.github.hgaol.uiharu.annotation.Inject;
 
 /**
  * @author: gaohan
@@ -8,4 +9,7 @@ import com.github.hgaol.uiharu.annotation.Controller;
  **/
 @Controller
 public class ControllerDemo {
+
+    @Inject
+    public ServiceDemo serviceDemo;
 }

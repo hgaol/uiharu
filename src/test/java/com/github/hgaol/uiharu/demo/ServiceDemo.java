@@ -8,4 +8,9 @@ import com.github.hgaol.uiharu.annotation.Service;
  **/
 @Service
 public class ServiceDemo {
+
+    public void hi() {
+        System.out.println("hi, i'm service demo!");
+    }
+
 }

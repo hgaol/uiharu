@@ -1,4 +1,4 @@
-package com.github.hgaolbb.uiharu.demo;
+package com.github.hgaol.uiharu.demo;
 
 /**
  * @author: gaohan

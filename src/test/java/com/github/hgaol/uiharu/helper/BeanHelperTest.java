@@ -1,9 +1,8 @@
-package com.github.hgaolbb.uiharu.helper;
+package com.github.hgaol.uiharu.helper;
 
-import com.github.hgaolbb.uiharu.annotation.Controller;
-import com.github.hgaolbb.uiharu.demo.ControllerDemo;
-import com.github.hgaolbb.uiharu.demo.HelloDemo;
-import com.github.hgaolbb.uiharu.util.ReflectionUtils;
+import com.github.hgaol.uiharu.demo.ControllerDemo;
+import com.github.hgaol.uiharu.demo.HelloDemo;
+import com.github.hgaol.uiharu.util.ReflectionUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
