@@ -40,7 +40,6 @@ public class ReflectionUtils {
      * 调用方法
      */
     public static Object invokeMethod(Object obj, Method method, Object... args) {
-        Object result;
         try {
             method.setAccessible(true);
             return method.invoke(obj, args);
