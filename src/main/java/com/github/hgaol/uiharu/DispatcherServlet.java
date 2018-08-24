@@ -1,5 +1,6 @@
 package com.github.hgaol.uiharu;
 
+import com.github.hgaol.uiharu.annotation.Body;
 import com.github.hgaol.uiharu.bean.Data;
 import com.github.hgaol.uiharu.bean.Handler;
 import com.github.hgaol.uiharu.bean.Param;
@@ -20,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.Map;
 
 /**
@@ -66,17 +68,25 @@ public class DispatcherServlet extends HttpServlet {
 
             // todo parse params
             Param param = RequestHelper.createRequestParams(req);
+            String body = RequestHelper.createRequestBody(req);
+            Object reqBody = null;
 
             // 反射调用request对应的方法
             Object controllerBean = BeanHelper.getBean(handler.getControllerClass());
 
             Object result;
             Method actionMethod = handler.getActionMethod();
-            if (param.isEmpty()) {
-                result = ReflectionUtils.invokeMethod(controllerBean, actionMethod);
-            } else {
-                result = ReflectionUtils.invokeMethod(controllerBean, actionMethod, param);
+            Parameter[] params = actionMethod.getParameters();
+            for (Parameter parameter : params) {
+                if (parameter.isAnnotationPresent(Body.class)) {
+                    reqBody = JsonUtils.toPojo(body, parameter.getType());
+                }
             }
+//            if (param.isEmpty()) {
+//                result = ReflectionUtils.invokeMethod(controllerBean, actionMethod);
+//            } else {
+                result = ReflectionUtils.invokeMethod(controllerBean, actionMethod, param, reqBody);
+//            }
 
             if (result instanceof View) {
                 handleViewResult((View) result, req, resp);

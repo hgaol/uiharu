@@ -59,6 +59,9 @@ public class ReflectionUtils {
         Class<?>[] clss = method.getParameterTypes();
         for (int i = 0; i < clss.length; i++) {
             for (Object arg : args) {
+                if (arg == null) {
+                    continue;
+                }
                 if (clss[i].isAssignableFrom(arg.getClass())) {
                     parsedArgs[i] = arg;
                     break;
