@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 
 /**
  * @author: gaohan
@@ -42,11 +43,29 @@ public class ReflectionUtils {
     public static Object invokeMethod(Object obj, Method method, Object... args) {
         try {
             method.setAccessible(true);
-            return method.invoke(obj, args);
+            Object[] parsedArgs = injectArgs(method, args);
+            return method.invoke(obj, parsedArgs);
         } catch (Exception e) {
             log.error("invoke method failure", e);
             throw new Error(e);
         }
+    }
+
+    /**
+     * 根据类型自动注入参数
+     */
+    private static Object[] injectArgs(Method method, Object[] args) {
+        Object[] parsedArgs = new Object[method.getParameterCount()];
+        Class<?>[] clss = method.getParameterTypes();
+        for (int i = 0; i < clss.length; i++) {
+            for (Object arg : args) {
+                if (clss[i].isAssignableFrom(arg.getClass())) {
+                    parsedArgs[i] = arg;
+                    break;
+                }
+            }
+        }
+        return parsedArgs;
     }
 
     /**

@@ -11,13 +11,14 @@ import com.github.hgaol.uiharu.util.ClassUtils;
  * @author: gaohan
  * @date: 2018-08-22 15:07
  **/
-public class HelperLoader {
+public final class HelperLoader {
 
     public static void init() {
         Class<?>[] classList = {
                 ClassHelper.class,
                 BeanHelper.class,
-                IocHelper.class
+                IocHelper.class,
+                com.github.hgaol.uiharu.helper.ControllerHelper.class
         };
         for (Class<?> cls : classList) {
             ClassUtils.loadClass(cls.getName());

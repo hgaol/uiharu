@@ -18,6 +18,7 @@ public class ClassHelper {
 
     static {
         String basePackage = ConfigHelper.getAppBasePackage();
+        System.out.println("== base package: " + basePackage);
         CLASS_SET = ClassUtils.getClassSet(basePackage);
     }
 

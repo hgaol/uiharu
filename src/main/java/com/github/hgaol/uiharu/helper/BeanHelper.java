@@ -40,6 +40,7 @@ public class BeanHelper {
     /**
      * 获取Bean实例
      */
+    @SuppressWarnings("unchecked")
     public static <T> T getBean(Class<T> cls) {
         if (!BEAN_MAP.containsKey(cls)) {
             throw new Error("can not find bean by class: " + cls);
