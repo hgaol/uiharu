@@ -34,7 +34,7 @@ public class RequestHelper {
      * 解析request body中的json为string，之后根据@RequestBody注解，查看是否转换为对应的body
      */
     public static String createRequestBody(HttpServletRequest req) {
-        // todo: 如果是表单提交或者文件上传，则人会null
+        // todo: 如果是表单提交或者文件上传，则会null
         if ("application/x-www-form-urlencoden".equals(req.getContentType())) {
             return null;
         }

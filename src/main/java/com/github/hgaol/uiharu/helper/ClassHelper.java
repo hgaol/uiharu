@@ -57,7 +57,7 @@ public class ClassHelper {
     /**
      * 获取scan-path下带有某种注解的类
      */
-    private static Set<Class<?>> getClassSetByAnnotation(Class<? extends Annotation> clazz) {
+    public static Set<Class<?>> getClassSetByAnnotation(Class<? extends Annotation> clazz) {
         Set<Class<?>> classSet = new HashSet<>();
         for (Class<?> cls : CLASS_SET) {
             if (cls.isAnnotationPresent(clazz)) {

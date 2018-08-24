@@ -1,5 +1,6 @@
 package com.github.hgaol.uiharu;
 
+import com.github.hgaol.uiharu.helper.AopHelper;
 import com.github.hgaol.uiharu.helper.BeanHelper;
 import com.github.hgaol.uiharu.helper.ClassHelper;
 import com.github.hgaol.uiharu.helper.IocHelper;
@@ -17,6 +18,7 @@ public final class HelperLoader {
         Class<?>[] classList = {
                 ClassHelper.class,
                 BeanHelper.class,
+                AopHelper.class,
                 IocHelper.class,
                 com.github.hgaol.uiharu.helper.ControllerHelper.class
         };
