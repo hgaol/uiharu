@@ -1,9 +1,11 @@
 package com.github.hgaol.uiharu.helper;
 
 import com.github.hgaol.uiharu.annotation.Aspect;
+import com.github.hgaol.uiharu.annotation.Service;
 import com.github.hgaol.uiharu.proxy.AspectProxy;
 import com.github.hgaol.uiharu.proxy.Proxy;
 import com.github.hgaol.uiharu.proxy.ProxyManager;
+import com.github.hgaol.uiharu.proxy.TransactionProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +50,13 @@ public class AopHelper {
     private static Map<Class<?>, Set<Class<?>>> createProxyMap() {
         Map<Class<?>, Set<Class<?>>> proxyMap = new HashMap<>();
         addAspectProxy(proxyMap);
+        addTransactionProxy(proxyMap);
         return proxyMap;
+    }
+
+    private static void addTransactionProxy(Map<Class<?>, Set<Class<?>>> proxyMap) {
+        Set<Class<?>> serviceClassSet = ClassHelper.getClassSetByAnnotation(Service.class);
+        proxyMap.put(TransactionProxy.class, serviceClassSet);
     }
 
     /**

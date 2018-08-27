@@ -4,10 +4,14 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.*;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -25,6 +29,14 @@ public final class DatabaseHelper {
     private static final QueryRunner QUERY_RUNNER;
 
     private static final BasicDataSource DATA_SOURCE;
+
+    private static final String TABLE_SEPERATOR = "_";
+
+    private static final String COLOUM_SEPERATOR = "_";
+
+    private static final String GET_METHOD_PREFIX_GET = "get";
+
+    private static final String GET_METHOD_PREFIX_IS = "is";
 
     static {
         CONNECTION_HOLDER = new ThreadLocal<>();
@@ -61,6 +73,59 @@ public final class DatabaseHelper {
             }
         }
         return conn;
+    }
+
+    /**
+     * 开启事务
+     */
+    public static void beginTransaction() {
+        Connection conn = getConnection();
+        if (conn != null) {
+            try {
+                conn.setAutoCommit(false);
+            } catch (SQLException e) {
+                log.error("begin transaction failure", e);
+                throw new RuntimeException(e);
+            } finally {
+                CONNECTION_HOLDER.set(conn);
+            }
+        }
+    }
+
+    /**
+     * 提交事务
+     */
+    public static void commitTransaction() {
+        Connection conn = getConnection();
+        if (conn != null) {
+            try {
+                conn.commit();
+                conn.close();
+            } catch (SQLException e) {
+                log.error("commit transaction failure", e);
+                throw new RuntimeException(e);
+            } finally {
+                CONNECTION_HOLDER.remove();
+            }
+        }
+    }
+
+    /**
+     * 回滚事务
+     */
+    public static void rollbackTransaction() {
+        Connection conn = getConnection();
+        if (conn != null) {
+            try {
+                conn.rollback();
+                conn.close();
+            } catch (SQLException e) {
+                log.error("rollback transaction failure", e);
+                throw new RuntimeException(e);
+            } finally {
+                CONNECTION_HOLDER.remove();
+            }
+        }
     }
 
     /**
@@ -207,28 +272,138 @@ public final class DatabaseHelper {
     }
 
     /**
-     * 插入实体
+     * todo 根据id判断，如果存在则update，不存在则insert
      */
-    public static <T> boolean insertEntity(Class<T> entityClass, Map<String, Object> fieldMap) {
-        if (MapUtils.isEmpty(fieldMap)) {
-            log.error("can not insert entity: fieldMap is empty");
+    public static boolean save(Object entity) {
+        return false;
+    }
+
+    /**
+     * 插入新的数据
+     *
+     * @param entity 实体
+     * @return 是否成功
+     */
+    public static boolean insert(Object entity) {
+        if (entity == null) {
+            log.error("entity is empty.");
             return false;
         }
 
-        String sql = "INSERT INTO " + entityClass.getSimpleName();
+        String tableName = capitalizeToPosix(entity.getClass().getSimpleName(), TABLE_SEPERATOR);
+        Map<String, Object> columnMap = getColoums(entity);
+        StringBuilder sql = new StringBuilder("INSERT INTO " + tableName + " ");
         StringBuilder columns = new StringBuilder("(");
         StringBuilder values = new StringBuilder("(");
-        for (String fieldName : fieldMap.keySet()) {
+        for (String fieldName : columnMap.keySet()) {
             columns.append(fieldName).append(", ");
             values.append("?, ");
         }
         columns.replace(columns.lastIndexOf(", "), columns.length(), ")");
         values.replace(values.lastIndexOf(", "), values.length(), ")");
-        sql += columns + " VALUES " + values;
+        sql.append(columns).append(" VALUES ").append(values);
 
-        Object[] params = fieldMap.values().toArray();
+        Object[] params = columnMap.values().toArray();
 
-        return update(sql, params) == 1;
+        return update(sql.toString(), params) == 1;
+    }
+
+    /**
+     * 根据id更新
+     */
+    public static boolean update(Object entity) {
+        if (entity == null) {
+            log.error("entity is empty.");
+            return false;
+        }
+
+        String tableName = capitalizeToPosix(entity.getClass().getSimpleName(), TABLE_SEPERATOR);
+        Map<String, Object> columnMap = getColoums(entity);
+        if (!columnMap.containsKey("id") || columnMap.get("id") == null) {
+            return false;
+        }
+        StringBuilder sql = new StringBuilder("UPDATE " + tableName + " SET ");
+        for (Map.Entry<String, Object> entry : columnMap.entrySet()) {
+            if ("id".equalsIgnoreCase(entry.getKey())) {
+                continue;
+            }
+            sql.append(entry.getKey()).append("= ?,");
+        }
+        sql.deleteCharAt(sql.length() - 1);
+        sql.append(" WHERE id = ?");
+        Object id = columnMap.get("id");
+        columnMap.remove("id");
+        List<Object> paramList = new ArrayList<>(columnMap.values());
+        paramList.add(id);
+
+        Object[] params = paramList.toArray();
+        System.out.println(sql.toString());
+        System.out.println(Arrays.toString(params));
+
+        return update(sql.toString(), params) == 1;
+    }
+
+    public static Map<String, Object> getColoums(Object entity) {
+        // 获取fields的name，获取value
+        Map<String, Object> ret = new HashMap<>();
+        Field[] fields = entity.getClass().getDeclaredFields();
+        if (fields == null || fields.length == 0) {
+            return ret;
+        }
+        for (Field field : fields) {
+            String coloumName = capitalizeToPosix(field.getName(), COLOUM_SEPERATOR);
+            Object coloumValue = getColoumValue(field, entity);
+            ret.put(coloumName, coloumValue);
+        }
+        return ret;
+    }
+
+    public static Object getColoumValue(Field field, Object entity) {
+        Method method;
+        try {
+            method = getGetterMethod(field, GET_METHOD_PREFIX_GET);
+            if (method == null) {
+                method = getGetterMethod(field, GET_METHOD_PREFIX_IS);
+            }
+            if (method == null) {
+                throw new Error("can not find getter method of field " + field.getName());
+            }
+            method.setAccessible(true);
+            return method.invoke(entity);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            log.error("can not invoke getter method of field: " + field.getName());
+            throw new Error(e);
+        }
+    }
+
+    public static Method getGetterMethod(Field field, String prefix) {
+        try {
+            return field.getDeclaringClass().getDeclaredMethod(prefix + StringUtils.capitalize(field.getName()));
+        } catch (NoSuchMethodException e) {
+            log.info(e.getMessage());
+            return null;
+        }
+    }
+
+    public static String capitalizeToPosix(String cap, String seperator) {
+        if (cap == null || StringUtils.isEmpty(cap)) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < cap.length(); i++) {
+            char c = cap.charAt(i);
+            if (i == 0) {
+                sb.append(Character.toLowerCase(c));
+            } else {
+                if (Character.isUpperCase(c)) {
+                    sb.append(seperator).append(Character.toLowerCase(c));
+                } else {
+                    sb.append(c);
+                }
+            }
+
+        }
+        return sb.toString();
     }
 
     /**
