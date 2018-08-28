@@ -82,7 +82,7 @@ public Customer getCustomersById() {
 }
 
 @Transaction
-public boolean createFailure() {
+public boolean insert() {
     Customer a = new Customer("a", "xiao a", "1234567890", "b@m.com");
     return DatabaseHelper.insert(a);
 }
